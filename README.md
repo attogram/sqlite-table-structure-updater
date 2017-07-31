@@ -5,21 +5,18 @@
 
 # Usage:
 
-
 * Create a New Table Structures File:
-
- * PHP file
- * sets an array $table in format: 
- * $table['name'] = "CREATE TABLE 'name' ( ... )";
+  * PHP file
+  * sets an array $table in format: 
+  * $table['name'] = "CREATE TABLE 'name' ( ... )";
 
 * Update via Web Form:
-
- * Enter SQLite Database file location
- * Enter New table structure file location
- * Click Run Updater
+  * Enter SQLite Database file location
+  * Enter New table structure file location
+  * Click Run Updater
  
 * Update via Code:
-
+```php
     use Attogram\SQLiteTableStructureUpdater;
     require_once('SQLiteTableStructureUpdater.php');
 	$updater = new SQLiteTableStructureUpdater();
@@ -36,8 +33,8 @@
 		$updater->set_new_structure($table_name, $table_sql);
 	}	
 	$updater->update();
+```
 
 # License
 
 * MIT License
-
