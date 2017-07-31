@@ -39,7 +39,7 @@ if( !isset($tables) || !is_array($tables) ) {
 
 // Or set new table structures directly, examples:
 // $tables = array(
-// 	'example' => "CREATE TABLE 'example' ( 'id' INTEGER PRIMARY KEY, 'foo' TEXT )",
+//  'example' => "CREATE TABLE 'example' ( 'id' INTEGER PRIMARY KEY, 'foo' TEXT )",
 // );
 // $tables['table2'] = "CREATE TABLE IF NOT EXISTS 'table2' ( 'id' INTEGER PRIMARY KEY, 'bar' TEXT )";
 // ...
@@ -60,3 +60,4 @@ $updater->update();
 - [ ] set_new_structure( (array)$tables ) instead of multi calls of set_new_structure($table_name, $table_sql)
 - [ ] refactor: remove un-needed $tables_new, use $sql_new
 - [ ] silent option: no debug(), notice() nor error()
+- [ ] add timers
