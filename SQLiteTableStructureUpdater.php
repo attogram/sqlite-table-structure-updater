@@ -3,7 +3,7 @@
 
 namespace Attogram;
 
-define('__STSU__','0.0.3');
+define('__STSU__','0.0.4');
 
 //////////////////////////////////////////////////////////
 class stsu_utils {
@@ -26,7 +26,7 @@ class stsu_utils {
 }
 
 //////////////////////////////////////////////////////////
-class stsu_database_utils EXTENDS stsu_utils  {
+class stsu_database EXTENDS stsu_utils  {
 
     protected $db;
     protected $database_file;
@@ -34,14 +34,13 @@ class stsu_database_utils EXTENDS stsu_utils  {
     protected $last_error;
 
     public function database_loaded() {
-        if( !$this->db ) { return FALSE; }
+        if( !$this->db ) {
+            $this->open_database();
+        }
+        if( !$this->db ) {
+            return FALSE;
+        }
         return TRUE;
-    }
-
-    protected function normalize_sql($sql) {
-        $sql = preg_replace('/\s+/', ' ', $sql);
-        $sql = str_replace('"', "'", $sql);
-        return trim($sql);
     }
 
     protected function open_database() {
@@ -60,10 +59,9 @@ class stsu_database_utils EXTENDS stsu_utils  {
 
     protected function query_as_array( $sql, $bind=array() ) {
         $this->debug( $this->normalize_sql($sql) );
-
-        if( !$this->db ) { $this->open_database(); }
-        if( !$this->db ) { return FALSE; }
-
+        if( !$this->database_loaded() ) {
+            return array();
+        }
         $statement = $this->db->prepare($sql);
         if( !$statement ) {
             $this->error('query_as_array(): ERROR PREPARE');
@@ -77,23 +75,19 @@ class stsu_database_utils EXTENDS stsu_utils  {
             $this->error('ERROR EXECUTE: '.print_r($this->db->errorInfo(),1));
             return array();
         }
-
         $response = $statement->fetchAll(\PDO::FETCH_ASSOC);
         if( !$response && $this->db->errorCode() != '00000') {
             $this->error('query_as_array(): ERROR FETCH: '.print_r($this->db->errorInfo(),1));
             $response = array();
         }
-
         return $response;
     }
 
     protected function query_as_bool( $sql, $bind=array() ) {
         $this->debug( $this->normalize_sql($sql) );
-        if( $bind ) {
-            $this->debug('query_as_bool: BIND: <pre>' . htmlentities(print_r($bind,1)) . '</pre>' );
+        if( !$this->database_loaded() ) {
+            return FALSE;
         }
-        if( !$this->db ) { $this->open_database(); }
-        if( !$this->db ) { return FALSE; }
         $this->last_error = FALSE;
         $statement = $this->db->prepare($sql);
         if( !$statement ) {
@@ -141,6 +135,17 @@ class stsu_database_utils EXTENDS stsu_utils  {
         return FALSE;
     }
 
+} // end class database_utils
+
+//////////////////////////////////////////////////////////
+class stsu_database_utils EXTENDS stsu_database  {
+
+    protected function normalize_sql($sql) {
+        $sql = preg_replace('/\s+/', ' ', $sql); // remove all excessive spaces and control chars
+        $sql = str_replace('"', "'", $sql); // use only single quote '
+        return trim($sql);
+    }
+
     protected function get_table_size($table_name) {
         $size = $this->query_as_array('SELECT count(rowid) AS count FROM ' . $table_name);
         if( isset($size[0]['count']) ) {
@@ -150,13 +155,12 @@ class stsu_database_utils EXTENDS stsu_utils  {
         return 0;
     }
 
-} // end class database_utils
+}
 
 //////////////////////////////////////////////////////////
 class SQLiteTableStructureUpdater extends stsu_database_utils {
 
     protected $tables_current;
-    protected $tables_new;
     protected $sql_current;
     protected $sql_new;
 
@@ -170,6 +174,7 @@ class SQLiteTableStructureUpdater extends stsu_database_utils {
         $this->tables_current = array();
         $this->sql_current = array();
         $this->set_table_info();
+        return $this->database_loaded();
     }
 
     public function set_new_structure($table_name, $sql) {
@@ -177,13 +182,12 @@ class SQLiteTableStructureUpdater extends stsu_database_utils {
         $sql = $this->normalize_sql($sql);
         $sql = str_ireplace('CREATE TABLE IF NOT EXISTS','CREATE TABLE',$sql);
         $this->sql_new[$table_name] = $sql;
-        $this->tables_new[$table_name] = array();
     }
 
     public function update() {
         $this->debug("update()");
         $to_update = array();
-        foreach( array_keys($this->tables_new) as $name ) {
+        foreach( array_keys($this->sql_new) as $name ) {
             $old = $this->normalize_sql( @$this->sql_current[$name] );
             $new = $this->normalize_sql( @$this->sql_new[$name] );
             $this->debug("$name: OLD: $old");
@@ -196,8 +200,7 @@ class SQLiteTableStructureUpdater extends stsu_database_utils {
         }
         if( !$to_update ) {
             $this->notice(
-                'Nothing to update: '
-                . sizeof($this->tables_new) . ' tables checked OK'
+                'OK: ' . sizeof($this->sql_new) . ' tables up-to-date'
             );
             return TRUE;
         }
@@ -245,6 +248,7 @@ class SQLiteTableStructureUpdater extends stsu_database_utils {
         }
         if( !$cols ) {
             $this->debug('Nothing to insert into table: ' . $table_name);
+            $new_size = 0;
         } else {
 
             $old_size = $this->get_table_size($table_name);
@@ -257,7 +261,7 @@ class SQLiteTableStructureUpdater extends stsu_database_utils {
             }
             $new_size = $this->get_table_size($tmp_name);
             if( $new_size == $old_size ) {
-                $this->notice("Inserted OK: $new_size rows into $tmp_name");
+                $this->debug("Inserted OK: $new_size rows into $tmp_name");
             } else {
                 $this->error("ERROR: Inserted new $new_size rows, from $old_size old rows");
             }
@@ -273,7 +277,8 @@ class SQLiteTableStructureUpdater extends stsu_database_utils {
         }
 
         $this->commit();
-        $this->notice('Updated: ' . $table_name );
+        $this->notice('OK: Table Structure Updated: ' . $table_name
+            . ': +' . number_format($new_size) . ' rows');
 
         $this->query_as_bool("DROP TABLE IF EXISTS '$tmp_name'");
         $this->query_as_bool("DROP TABLE IF EXISTS '$backup_name'");

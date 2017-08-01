@@ -26,8 +26,7 @@ require_once('SQLiteTableStructureUpdater.php');
 $updater = new SQLiteTableStructureUpdater();
 //$updater->debug = TRUE; // debug mode
 
-$updater->set_database_file('./your-database-file.sqlite');
-if( !$updater->database_loaded() ) {
+if( !$updater->set_database_file('./your-database-file.sqlite') ) {
     // handle error
 }
 
@@ -58,6 +57,6 @@ $updater->update();
 
 # TODO
 - [ ] set_new_structure( (array)$tables ) instead of multi calls of set_new_structure($table_name, $table_sql)
-- [ ] refactor: remove un-needed $tables_new, use $sql_new
 - [ ] silent option: no debug(), notice() nor error()
 - [ ] add timers
+- [ ] option to delete or keep backup tables
