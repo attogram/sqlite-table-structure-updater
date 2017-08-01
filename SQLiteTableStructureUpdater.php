@@ -3,23 +3,23 @@
 
 namespace Attogram;
 
-define('__STSU__','0.0.4');
+define('__STSU__','0.0.5');
 
 //////////////////////////////////////////////////////////
 class stsu_utils {
 
     public $debug;
 
-    public function debug($msg) {
+    public function debug( $msg ) {
         if( !$this->debug ) { return; }
         print '<p class="debug">' . print_r($msg,1) . '</p>';
     }
 
-    public function notice($msg) {
+    public function notice( $msg ) {
         print '<p class="notice">' . print_r($msg,1) . '</p>';
     }
 
-    public function error($msg) {
+    public function error( $msg ) {
         print '<p class="error">' . print_r($msg,1) . '</p>';
     }
 
@@ -140,13 +140,14 @@ class stsu_database EXTENDS stsu_utils  {
 //////////////////////////////////////////////////////////
 class stsu_database_utils EXTENDS stsu_database  {
 
-    protected function normalize_sql($sql) {
+    protected function normalize_sql( $sql ) {
         $sql = preg_replace('/\s+/', ' ', $sql); // remove all excessive spaces and control chars
         $sql = str_replace('"', "'", $sql); // use only single quote '
+        $sql = str_ireplace('CREATE TABLE IF NOT EXISTS', 'CREATE TABLE', $sql); // standard create syntax
         return trim($sql);
     }
 
-    protected function get_table_size($table_name) {
+    protected function get_table_size( $table_name ) {
         $size = $this->query_as_array('SELECT count(rowid) AS count FROM ' . $table_name);
         if( isset($size[0]['count']) ) {
             return $size[0]['count'];
@@ -168,7 +169,7 @@ class SQLiteTableStructureUpdater extends stsu_database_utils {
         $this->debug('__construct()');
     }
 
-    public function set_database_file($file) {
+    public function set_database_file( $file ) {
         $this->debug("set_database_file($file)");
         $this->database_file = $file;
         $this->tables_current = array();
@@ -177,10 +178,34 @@ class SQLiteTableStructureUpdater extends stsu_database_utils {
         return $this->database_loaded();
     }
 
-    public function set_new_structure($table_name, $sql) {
+    public function set_new_structures( $tables = array() ) {
+        $this->debug("set_new_structures($tables)");
+        if( !$tables || !is_array($tables) ) {
+            $this->error('$tables array is invalid');
+            return FALSE;
+        }
+        $errors = 0;
+        $count = 0;
+        while( list($table_name,$table_sql) = each($tables) ) {
+            $count++;
+            if( !$table_name || !is_string($table_name) ) {
+                $this->error("#$count - Invalid table name");
+                $errors++;
+                continue;
+            }
+            if( !$table_sql || !is_string($table_sql) ) {
+                $this->error("#$count - Invalid table sql");
+                $errors++;
+                continue;
+            }
+            $this->set_new_structure( $table_name, $table_sql );
+        }
+        return $errors ? FALSE : TRUE;
+    }
+
+    public function set_new_structure( $table_name, $sql ) {
         $this->debug("set_new_structure($table_name, $sql)");
         $sql = $this->normalize_sql($sql);
-        $sql = str_ireplace('CREATE TABLE IF NOT EXISTS','CREATE TABLE',$sql);
         $this->sql_new[$table_name] = $sql;
     }
 
@@ -213,7 +238,7 @@ class SQLiteTableStructureUpdater extends stsu_database_utils {
         }
     } // end function update()
 
-    protected function update_table($table_name) {
+    protected function update_table( $table_name ) {
         $this->debug("update_table($table_name)");
         $tmp_name = '_STSU_TMP_' . $table_name;
         $backup_name = '_STSU_BACKUP_' . $table_name;
@@ -303,7 +328,7 @@ class SQLiteTableStructureUpdater extends stsu_database_utils {
         }
     }
 
-    protected function set_table_column_info($table_name) {
+    protected function set_table_column_info( $table_name ) {
         $this->debug("set_table_column_info($table_name)");
         $columns = $this->query_as_array("PRAGMA table_info( $table_name )");
         foreach($columns as $column) {

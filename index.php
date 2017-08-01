@@ -76,9 +76,9 @@ if( !isset($tables) ) {
     $updater->error('ERROR: No tables defined in Structure File');
     footer();
 }
-
-while( list($table_name,$table_sql) = each($tables) ) {
-    $updater->set_new_structure( $table_name, $table_sql );
+if( !$updater->set_new_structures( $tables ) ) {
+    $updater->error('ERROR: Set New Structures FAILED');
+    footer();
 }
 
 $updater->update();

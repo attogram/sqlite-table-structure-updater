@@ -30,21 +30,21 @@ if( !$updater->set_database_file('./your-database-file.sqlite') ) {
     // handle error
 }
 
-// Set new table structures via file, example:
-include('./your-new-table-structure-file.php'); // sets array $table
-if( !isset($tables) || !is_array($tables) ) {
+// Set new table structures:
+// Set array $tables in format: $tables[TABLE_NAME] = TABLE_SQL;
+
+// Set new table structures via external file:
+include('./your-new-table-structure-file.php');
+
+// Or Set new table structures directly:
+$tables = array(
+    'a_table' => "CREATE TABLE 'a_table' ( 'id' INTEGER PRIMARY KEY, 'foo' TEXT )",
+    'b_table' => "CREATE TABLE 'b_table' ( 'id' INTEGER PRIMARY KEY, 'bar' TEXT )",
+);
+$tables['c_table'] = "CREATE TABLE 'mytable' ( 'id' INTEGER PRIMARY KEY, 'foo' TEXT )";
+
+if( !$updater->set_new_structures( $tables ) ) {
     // handle error
-}
-
-// Or set new table structures directly, examples:
-// $tables = array(
-//  'example' => "CREATE TABLE 'example' ( 'id' INTEGER PRIMARY KEY, 'foo' TEXT )",
-// );
-// $tables['table2'] = "CREATE TABLE IF NOT EXISTS 'table2' ( 'id' INTEGER PRIMARY KEY, 'bar' TEXT )";
-// ...
-
-while( list($table_name,$table_sql) = each($tables) ) {
-    $updater->set_new_structure($table_name, $table_sql);
 }
 
 $updater->update();
@@ -56,7 +56,6 @@ $updater->update();
 * MIT License
 
 # TODO
-- [ ] set_new_structure( (array)$tables ) instead of multi calls of set_new_structure($table_name, $table_sql)
 - [ ] silent option: no debug(), notice() nor error()
 - [ ] add timers
 - [ ] option to delete or keep backup tables
