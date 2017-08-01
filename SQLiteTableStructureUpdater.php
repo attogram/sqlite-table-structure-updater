@@ -3,7 +3,7 @@
 
 namespace Attogram;
 
-define('__STSU__','0.0.8');
+define('__STSU__','0.0.9');
 
 //////////////////////////////////////////////////////////
 class stsu_utils {
@@ -51,16 +51,6 @@ class stsu_database EXTENDS stsu_utils  {
     protected $database_file;
     protected $last_insert_id;
     protected $last_error;
-
-    public function database_loaded() {
-        if( !$this->db ) {
-            $this->open_database();
-        }
-        if( !$this->db ) {
-            return FALSE;
-        }
-        return TRUE;
-    }
 
     protected function open_database() {
         $this->debug('open_database: ' . $this->database_file);
@@ -252,6 +242,16 @@ class SQLiteTableStructureUpdater extends stsu_database {
         return TRUE;
     } // end function update()
 
+    public function database_loaded() {
+        if( !$this->db ) {
+            $this->open_database();
+        }
+        if( !$this->db ) {
+            return FALSE;
+        }
+        return TRUE;
+    }
+	
     protected function update_table( $table_name ) {
         $this->debug("update_table($table_name)");
         $tmp_name = '_STSU_TMP_' . $table_name;
