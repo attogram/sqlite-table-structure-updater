@@ -31,7 +31,7 @@ if( !$updater->set_database_file('./your-database-file.sqlite') ) {
 }
 
 // Set new table structures via file, example:
-include('./your-new-tabe-structure-file.php'); // sets array $table
+include('./your-new-table-structure-file.php'); // sets array $table
 if( !isset($tables) || !is_array($tables) ) {
     // handle error
 }
