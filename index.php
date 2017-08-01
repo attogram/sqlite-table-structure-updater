@@ -1,5 +1,6 @@
 <?php
 // SQLite Table Structure Updater
+// Example web form
 
 use Attogram\SQLiteTableStructureUpdater;
 
@@ -13,7 +14,7 @@ require_once('SQLiteTableStructureUpdater.php');
 body { background-color:white; color:black; font-family:monospace;
 margin:5px 10px 5px 10px; padding:0px;  }
 a { text-decoration:none; }
-h1 { display:inline;  }
+h1 { display:inline; font-size:120%; }
 form { display:inline-block; border:1px solid blue; padding:10px; line-height:2; }
 .debug { background-color:#ffffcc; border:1px solid #ffffaa; margin:0px; padding:2px; }
 .notice { background-color:#ccffcc; border:1px solid #33ff33; margin:0px; padding:2px; }
@@ -36,7 +37,6 @@ print '<p><form action="" method="GET">'
 . '<br /><input type="checkbox" name="debug" /> Debug Mode'
 . '<br /><input type="submit" value="    Run SQLite Table Structure Updater    ">'
 . '</form></p>';
-
 
 if( !$database_file ) {
     print '<p class="error">Please select a SQLite Database File</p>';
@@ -76,7 +76,7 @@ if( !isset($tables) ) {
     $updater->error('ERROR: No tables defined in Structure File');
     footer();
 }
-if( !$updater->set_new_structures( $tables ) ) {
+if( !$updater->set_new_structures($tables) ) {
     $updater->error('ERROR: Set New Structures FAILED');
     footer();
 }
@@ -85,17 +85,13 @@ $updater->update();
 
 footer();
 
-
-/////////////////////////////////////
+//////////////////////////////////////////////////////////
 function footer() {
     global $updater;
     print '<br /><br /><hr />';
-
     print '<a target="github" href="https://github.com/attogram/sqlite-table-structure-updater">'
     . 'SQLite Table Structure Updater v' . __STSU__ . '</a>';
-
     print '<br />TIME: ' . gmdate('Y-m-d H:i:s') . ' UTC';
-
     if( isset($updater->timer_results) ) {
         $updater->end_timer('page');
         while( list($timer_name,$result) = each($updater->timer_results) ) {

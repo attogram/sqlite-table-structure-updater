@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2017 Attogram Project Developers - https://github.com/attogram/sqlite-table-structure-updater
+Copyright (c) 2017 SQLite Table Structure Updater Developers - https://github.com/attogram/sqlite-table-structure-updater
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -1,4 +1,4 @@
-# PHP SQLite Table Structure Updater
+# SQLite Table Structure Updater
 
 * ALPHA RELEASE
 * Semi-automated updating of SQLite database table structures.

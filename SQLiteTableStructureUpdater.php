@@ -3,7 +3,7 @@
 
 namespace Attogram;
 
-define('__STSU__','0.0.9');
+define('__STSU__','0.1.0');
 
 //////////////////////////////////////////////////////////
 class stsu_utils {
@@ -126,7 +126,7 @@ class stsu_database EXTENDS stsu_utils  {
         $this->last_error = $this->db->errorInfo();
         $this->end_timer('query_as_bool');
         return TRUE;
-    } // end function query_as_bool()
+    }
 
     protected function vacuum() {
         $this->start_timer('vacuum');
@@ -155,7 +155,7 @@ class stsu_database EXTENDS stsu_utils  {
         return FALSE;
     }
 
-} // end class database_utils
+}
 
 //////////////////////////////////////////////////////////
 class SQLiteTableStructureUpdater extends stsu_database {
@@ -240,7 +240,7 @@ class SQLiteTableStructureUpdater extends stsu_database {
         }
         $this->end_timer('update');
         return TRUE;
-    } // end function update()
+    }
 
     public function database_loaded() {
         if( !$this->db ) {
@@ -251,33 +251,27 @@ class SQLiteTableStructureUpdater extends stsu_database {
         }
         return TRUE;
     }
-	
+
     protected function update_table( $table_name ) {
         $this->debug("update_table($table_name)");
         $tmp_name = '_STSU_TMP_' . $table_name;
         $backup_name = '_STSU_BACKUP_' . $table_name;
-
         $this->query_as_bool("DROP TABLE IF EXISTS '$tmp_name'");
         $this->query_as_bool("DROP TABLE IF EXISTS '$backup_name'");
-
         $this->begin_transaction();
-
         $sql = $this->sql_new[$table_name];
         $sql = str_ireplace(
             "CREATE TABLE '$table_name'",
             "CREATE TABLE '$tmp_name'",
             $sql
         );
-
         if( !$this->query_as_bool($sql) ) {
             $this->error('ERROR: can not create tmp table:<br />' . $sql );
             return FALSE;
         }
-
         // Get Columns of new table
         $this->set_table_column_info($tmp_name);
         $new_cols = $this->tables_current[$tmp_name];
-
         // Only use Columns both in new and old tables
         $cols = array();
         foreach( $new_cols as $new_col ) {
@@ -289,7 +283,6 @@ class SQLiteTableStructureUpdater extends stsu_database {
             $this->debug('Nothing to insert into table: ' . $table_name);
             $new_size = 0;
         } else {
-
             $old_size = $this->get_table_size($table_name);
             $cols = implode( $cols, ', ');
             $sql = "INSERT INTO '$tmp_name' ( $cols ) SELECT $cols FROM $table_name";
@@ -309,22 +302,17 @@ class SQLiteTableStructureUpdater extends stsu_database {
                 return FALSE;
             }
         }
-
         if( !$this->query_as_bool("ALTER TABLE $tmp_name RENAME TO $table_name") ) {
             $this->error('ERROR: can not rename '.$tmp_name.' to '.$backup_name );
             return FALSE;
         }
-
         $this->commit();
         $this->notice('OK: Table Structure Updated: ' . $table_name
             . ': +' . number_format($new_size) . ' rows');
-
         $this->query_as_bool("DROP TABLE IF EXISTS '$tmp_name'");
         $this->query_as_bool("DROP TABLE IF EXISTS '$backup_name'");
         $this->vacuum();
-
-
-    } // end function update_table()
+    }
 
     protected function set_table_info() {
         $this->debug('set_table_info()');
@@ -366,4 +354,4 @@ class SQLiteTableStructureUpdater extends stsu_database {
         return 0;
     }
 
-} // end class SQLiteTableStructureUpdater
+}
