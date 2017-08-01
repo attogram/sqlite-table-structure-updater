@@ -9,8 +9,8 @@
 
 * Update via Web Form:
   * Enter Location of your SQLite Database File
-  * Enter Location of your New Table Structure File
-    * must be a PHP file that sets array $table in format: $table['name'] = "CREATE TABLE 'name' ( ... )";
+  * Enter Location of your New Table Structures File
+    * must be a PHP file that sets array `$tables` in format: `$tables['name'] = "CREATE TABLE 'name' ( ... )";`
   * Click Run Updater
 
 * Update via Code:
