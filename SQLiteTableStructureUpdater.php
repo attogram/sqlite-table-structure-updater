@@ -3,7 +3,7 @@
 
 namespace Attogram;
 
-define('__STSU__','0.0.7');
+define('__STSU__','0.0.8');
 
 //////////////////////////////////////////////////////////
 class stsu_utils {
@@ -23,10 +23,6 @@ class stsu_utils {
 
     public function error( $msg ) {
         print '<p class="error">' . print_r($msg,1) . '</p>';
-    }
-
-    function time_now() {
-        return gmdate('Y-m-d H:i:s');
     }
 
     function start_timer( $name ) {
@@ -172,28 +168,7 @@ class stsu_database EXTENDS stsu_utils  {
 } // end class database_utils
 
 //////////////////////////////////////////////////////////
-class stsu_database_utils EXTENDS stsu_database  {
-
-    protected function normalize_sql( $sql ) {
-        $sql = preg_replace('/\s+/', ' ', $sql); // remove all excessive spaces and control chars
-        $sql = str_replace('"', "'", $sql); // use only single quote '
-        $sql = str_ireplace('CREATE TABLE IF NOT EXISTS', 'CREATE TABLE', $sql); // standard create syntax
-        return trim($sql);
-    }
-
-    protected function get_table_size( $table_name ) {
-        $size = $this->query_as_array('SELECT count(rowid) AS count FROM ' . $table_name);
-        if( isset($size[0]['count']) ) {
-            return $size[0]['count'];
-        }
-        $this->error('Can not get table size: ' . $table_name);
-        return 0;
-    }
-
-}
-
-//////////////////////////////////////////////////////////
-class SQLiteTableStructureUpdater extends stsu_database_utils {
+class SQLiteTableStructureUpdater extends stsu_database {
 
     protected $tables_current;
     protected $sql_current;
@@ -373,6 +348,22 @@ class SQLiteTableStructureUpdater extends stsu_database_utils {
         foreach($columns as $column) {
             $this->tables_current[$table_name][$column['name']] = $column;
         }
+    }
+
+    protected function normalize_sql( $sql ) {
+        $sql = preg_replace('/\s+/', ' ', $sql); // remove all excessive spaces and control chars
+        $sql = str_replace('"', "'", $sql); // use only single quote '
+        $sql = str_ireplace('CREATE TABLE IF NOT EXISTS', 'CREATE TABLE', $sql); // standard create syntax
+        return trim($sql);
+    }
+
+    protected function get_table_size( $table_name ) {
+        $size = $this->query_as_array('SELECT count(rowid) AS count FROM ' . $table_name);
+        if( isset($size[0]['count']) ) {
+            return $size[0]['count'];
+        }
+        $this->error('Can not get table size: ' . $table_name);
+        return 0;
     }
 
 } // end class SQLiteTableStructureUpdater
