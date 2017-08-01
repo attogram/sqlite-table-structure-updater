@@ -83,17 +83,27 @@ if( !$updater->set_new_structures( $tables ) ) {
 
 $updater->update();
 
-$updater->debug('<pre>' . print_r($updater,1) . '</pre>');
-
 footer();
 
 
 /////////////////////////////////////
 function footer() {
-    print '<br /><br /><hr />'
-    . gmdate('Y-m-d H:i:s')
-    . ' UTC - <a target="github" href="https://github.com/attogram/sqlite-table-structure-updater">'
-        . 'attogram/sqlite-table-structure-updater v' . __STSU__ . '</a>'
+    global $updater;
+    print '<br /><br /><hr />';
+
+    print '<a target="github" href="https://github.com/attogram/sqlite-table-structure-updater">'
+    . 'SQLite Table Structure Updater v' . __STSU__ . '</a>';
+
+    print '<br />TIME: ' . gmdate('Y-m-d H:i:s') . ' UTC';
+
+    if( isset($updater->timer_results) ) {
+        $updater->end_timer('page');
+        while( list($timer_name,$result) = each($updater->timer_results) ) {
+            print '<br />TIMER: ' . str_pad( round($result,5), 7, '0' ) . ' - ' . $timer_name;
+        }
+    }
+    print '<br />MEMORY usage: ' . number_format(memory_get_usage())
+    . '<br />MEMORY peak : ' . number_format(memory_get_peak_usage())
     . '</body></html>';
     exit;
 }

@@ -3,12 +3,14 @@
 
 namespace Attogram;
 
-define('__STSU__','0.0.5');
+define('__STSU__','0.0.6');
 
 //////////////////////////////////////////////////////////
 class stsu_utils {
 
     public $debug;
+    protected $timer;
+    public $timer_results;
 
     public function debug( $msg ) {
         if( !$this->debug ) { return; }
@@ -21,6 +23,27 @@ class stsu_utils {
 
     public function error( $msg ) {
         print '<p class="error">' . print_r($msg,1) . '</p>';
+    }
+
+    function time_now() {
+        return gmdate('Y-m-d H:i:s');
+    }
+
+    function start_timer( $name ) {
+        $this->timer[$name] = microtime(1);
+    }
+
+    function end_timer( $name ) {
+        if( !isset($this->timer[$name]) ) {
+            $this->timer_results[$name] = 0;
+            return;
+        }
+        $result = microtime(1) - $this->timer[$name];
+        if( isset($this->timer_results[$name]) ) {
+            $this->timer_results[$name] += $result;
+            return;
+        }
+        $this->timer_results[$name] = $result;
     }
 
 }
@@ -62,9 +85,11 @@ class stsu_database EXTENDS stsu_utils  {
         if( !$this->database_loaded() ) {
             return array();
         }
+        $this->start_timer('query_as_array');
         $statement = $this->db->prepare($sql);
         if( !$statement ) {
             $this->error('query_as_array(): ERROR PREPARE');
+            $this->end_timer('query_as_array');
             return array();
         }
         while( $xbind = each($bind) ) {
@@ -73,6 +98,7 @@ class stsu_database EXTENDS stsu_utils  {
         }
         if( !$statement->execute() ) {
             $this->error('ERROR EXECUTE: '.print_r($this->db->errorInfo(),1));
+            $this->end_timer('query_as_array');
             return array();
         }
         $response = $statement->fetchAll(\PDO::FETCH_ASSOC);
@@ -80,6 +106,7 @@ class stsu_database EXTENDS stsu_utils  {
             $this->error('query_as_array(): ERROR FETCH: '.print_r($this->db->errorInfo(),1));
             $response = array();
         }
+        $this->end_timer('query_as_array');
         return $response;
     }
 
@@ -88,11 +115,13 @@ class stsu_database EXTENDS stsu_utils  {
         if( !$this->database_loaded() ) {
             return FALSE;
         }
+        $this->start_timer('query_as_bool');
         $this->last_error = FALSE;
         $statement = $this->db->prepare($sql);
         if( !$statement ) {
             $this->last_error = $this->db->errorInfo();
             $this->error('ERROR: ' . print_r($this->last_error,1) );
+            $this->end_timer('query_as_bool');
             return FALSE;
         }
         while( $xbind = each($bind) ) {
@@ -100,21 +129,26 @@ class stsu_database EXTENDS stsu_utils  {
         }
         if( !$statement->execute() ) {
             $this->last_error = $this->db->errorInfo();
-            if( $this->last_error[0] == '00000' ) {
-                //$this->debug('NULL EVENT: ' . trim($sql));
+            if( $this->last_error[0] == '00000' ) { // no error
+                $this->end_timer('query_as_bool');
                 return TRUE;
             }
             $this->error('query_as_bool: prepare failed: ' . print_r($this->last_error,1) );
+            $this->end_timer('query_as_bool');
             return FALSE;
         }
         $this->last_error = $this->db->errorInfo();
+        $this->end_timer('query_as_bool');
         return TRUE;
     } // end function query_as_bool()
 
     protected function vacuum() {
+        $this->start_timer('vacuum');
         if( $this->query_as_bool('VACUUM') ) {
+            $this->end_timer('vacuum');
             return TRUE;
         }
+        $this->end_timer('vacuum');
         $this->error('FAILED to VACUUM');
         return FALSE;
     }
@@ -166,6 +200,7 @@ class SQLiteTableStructureUpdater extends stsu_database_utils {
     protected $sql_new;
 
     public function __construct() {
+        $this->start_timer('page');
         $this->debug('__construct()');
     }
 
@@ -179,7 +214,7 @@ class SQLiteTableStructureUpdater extends stsu_database_utils {
     }
 
     public function set_new_structures( $tables = array() ) {
-        $this->debug("set_new_structures($tables)");
+        $this->debug('set_new_structures()');
         if( !$tables || !is_array($tables) ) {
             $this->error('$tables array is invalid');
             return FALSE;
@@ -211,6 +246,7 @@ class SQLiteTableStructureUpdater extends stsu_database_utils {
 
     public function update() {
         $this->debug("update()");
+        $this->start_timer('update');
         $to_update = array();
         foreach( array_keys($this->sql_new) as $name ) {
             $old = $this->normalize_sql( @$this->sql_current[$name] );
@@ -227,6 +263,7 @@ class SQLiteTableStructureUpdater extends stsu_database_utils {
             $this->notice(
                 'OK: ' . sizeof($this->sql_new) . ' tables up-to-date'
             );
+            $this->end_timer('update');
             return TRUE;
         }
         $this->notice(
@@ -236,6 +273,8 @@ class SQLiteTableStructureUpdater extends stsu_database_utils {
         foreach( $to_update as $table_name ) {
             $this->update_table($table_name);
         }
+        $this->end_timer('update');
+        return TRUE;
     } // end function update()
 
     protected function update_table( $table_name ) {

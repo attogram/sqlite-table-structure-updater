@@ -1,4 +1,6 @@
 *.sqlite
 *.sqlite-journal
+*.sql
+*-journal
 phpliteadmin.php
 new.tables.php

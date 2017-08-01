@@ -41,7 +41,7 @@ $tables = array(
     'a_table' => "CREATE TABLE 'a_table' ( 'id' INTEGER PRIMARY KEY, 'foo' TEXT )",
     'b_table' => "CREATE TABLE 'b_table' ( 'id' INTEGER PRIMARY KEY, 'bar' TEXT )",
 );
-$tables['c_table'] = "CREATE TABLE 'mytable' ( 'id' INTEGER PRIMARY KEY, 'foo' TEXT )";
+$tables['c_table'] = "CREATE TABLE 'c_table' ( 'id' INTEGER PRIMARY KEY, 'foobar' TEXT )";
 
 if( !$updater->set_new_structures( $tables ) ) {
     // handle error
@@ -56,6 +56,6 @@ $updater->update();
 * MIT License
 
 # TODO
-- [ ] silent option: no debug(), notice() nor error()
-- [ ] add timers
 - [ ] option to delete or keep backup tables
+- [ ] silent option: no debug(), notice() nor error()
+
