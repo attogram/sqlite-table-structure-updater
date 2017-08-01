@@ -6,14 +6,11 @@
 
 # Usage:
 
-* Create a New Table Structures File:
-  * PHP file
-  * sets an array $table in format:
-  * $table['name'] = "CREATE TABLE 'name' ( ... )";
 
 * Update via Web Form:
-  * Enter SQLite Database file location
-  * Enter New table structure file location
+  * Enter Location of your SQLite Database File
+  * Enter Location of your New Table Structure File
+    * must be a PHP file that sets array $table in format: $table['name'] = "CREATE TABLE 'name' ( ... )";
   * Click Run Updater
 
 * Update via Code:
@@ -58,4 +55,5 @@ $updater->update();
 # TODO
 - [ ] option to delete or keep backup tables
 - [ ] silent option: no debug(), notice() nor error()
+- [ ] normalize_sql() - remove any trailing semi-colons ;
 
