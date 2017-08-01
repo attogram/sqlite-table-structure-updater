@@ -3,7 +3,7 @@
 
 namespace Attogram;
 
-define('__STSU__','0.0.6');
+define('__STSU__','0.0.7');
 
 //////////////////////////////////////////////////////////
 class stsu_utils {
